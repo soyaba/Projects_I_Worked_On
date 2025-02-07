@@ -1,0 +1,306 @@
+---
+title: "Actividad 2 Estadística"
+author: "Miss Soyaba"
+date: "2023-12-29"
+output: 
+  cleanrmd::html_document_clean:
+    theme: water-dark
+    toc: true
+    toc_float: true
+  
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Los especialistas tomaron la temperatura de las unidades de procesamiento central (CPU) de los computadores en tres oficinas distintas tras realizar tareas computacionales intensivas. Posteriormente, se procedió a analizar minuciosamente los datos obtenidos para comprender la distribución y la variabilidad de las temperaturas en cada oficina.
+
+## <b style = 'color:red;'>Ejercicio 1</b>
+
+Haz un **histograma múltiple** para comparar la distribución de temperaturas de los ordenadores de las tres aulas.
+
+### Respuesta: 
+
+
+```{r cars}
+# Crear datos
+set.seed(123)  # Para reproducibilidad
+oficinas <- rep(c("Oficina A", "Oficina B", "Oficina C"), each = 20)
+temperaturas <- rnorm(60, mean = c(70, 75, 80), sd = 2)
+calculos_pesados <- rnorm(60, mean = 100, sd = 20)
+
+# Crear un dataframe
+datos <- data.frame(Oficina = oficinas, Temperatura = temperaturas, Cálculos_Pesados = calculos_pesados)
+
+# Guardar los datos en un archivo CSV
+write.csv(datos, "temperaturas_cpu.csv", row.names = FALSE)
+
+# Cargar los datos desde el archivo CSV
+datos <- read.csv("temperaturas_cpu.csv")
+
+# Crear un histograma
+hist(datos$Temperatura, main = "Histograma de Temperaturas",
+     xlab = "Temperatura", ylab = "Frecuencia",
+     col = "lightblue", border = "black")
+```
+
+## <b style = 'color:red;'>Ejercicio 2</b>
+
+Haz un **boxplot múltiple** para comparar la distribución de temperaturas de los ordenadores de las tres aulas.
+
+### Respuesta: 
+
+```{r}
+#Pregunta 2
+
+# Crear un boxplot
+boxplot(Temperatura ~ Oficina, data = datos,
+        col = c("lightblue", "lightgreen", "lightcoral"),
+        main = "Boxplot de Temperaturas en las Oficinas",
+        xlab = "Oficina",
+        ylab = "Temperatura")
+
+```
+
+## <b style = 'color:red;'>Ejercicio 3</b>
+
+¿Cómo pueden afectar los **puntos atípicos** en el cálculo de  la media y la desviación estándar?  
+
+### Respuesta: 
+
+Los puntos atípicos pueden alterar la media, sesgando hacia arriba o hacia abajo, dependiendo de su valor extremo. Asimismo, incrementan artificialmente la variabilidad, afectando la precisión de la desviación estándar. En presencia de valores atípicos, es recomendable considerar medidas más robustas como la mediana.
+
+## <b style = 'color:red;'>Ejercicio 4</b>
+
+Comprueba, para cada una de las oficinas, si los datos de las temperaturas de los ordenadores se ajusten a una distribución normal. Hazlo a través del **test Shapiro-Wilk**.
+
+### Respuesta: 
+
+```{r}
+#Pregunta 4
+# Realizar la prueba de normalidad para cada oficina
+oficinas_unicas <- unique(datos$Oficina)
+
+for (oficina in oficinas_unicas) {
+  # Seleccionar las temperaturas para la oficina actual
+  temperaturas_oficina <- datos$Temperatura[datos$Oficina == oficina]
+  
+  # Realizar la prueba de normalidad de Shapiro-Wilk
+  shapiro_test_result <- shapiro.test(temperaturas_oficina)
+  
+  # Imprimir los resultados
+  cat("Oficina:", oficina, "\n")
+  cat("Estadística de prueba:", shapiro_test_result$statistic, "\n")
+  cat("Valor p:", shapiro_test_result$p.value, "\n")
+  
+  # Comprobar la significancia y mostrar el resultado
+  if (shapiro_test_result$p.value > 0.05) {
+    cat("No se rechaza la hipótesis nula (los datos se ajustan a una distribución normal)\n\n")
+  } else {
+    cat("Se rechaza la hipótesis nula (los datos no se ajustan a una distribución normal)\n\n")
+  }
+}
+
+
+```
+
+Con el test Shapiro-Wilk  el valor p tiene que ser mayor que 0.05, si es así, podemos decir que se  ajustan a una distribución normal. Por ejemplo en  Oficina A hemos comprobado con R que el valor p nos da “Valor p: 0.4162601 “ , en  Oficina B nos da “Valor p: 0.05742525 “ , y en Oficina C nos da “Valor p: 0.3970388 “. Podemos confirmar que en los tres casos los  datos se ajustan a una distribución normal.
+
+## <b style = 'color:red;'>Ejercicio 4.1</b>
+
+Comprobar que se trata de una distribución normal a través de las gráficas del **modelo de regresión lineal**.
+
+
+### Respuesta: 
+
+```{r}
+# Realizar la prueba de normalidad y crear gráficos QQ para cada oficina
+oficinas_unicas <- unique(datos$Oficina)
+
+par(mfrow=c(length(oficinas_unicas), 2), mar=c(2, 4, 2, 1))
+
+for (i in seq_along(oficinas_unicas)) {
+  oficina <- oficinas_unicas[i]
+  temperaturas_oficina <- datos$Temperatura[datos$Oficina == oficina]
+  
+  # Realizar la prueba de normalidad de Shapiro-Wilk
+  shapiro_test_result <- shapiro.test(temperaturas_oficina)
+  
+  # Imprimir los resultados
+  cat("Oficina:", oficina, "\n")
+  cat("Estadística de prueba:", shapiro_test_result$statistic, "\n")
+  cat("Valor p:", shapiro_test_result$p.value, "\n")
+  
+  # Comprobar la significancia y mostrar el resultado
+  if (shapiro_test_result$p.value > 0.05) {
+    cat("No se rechaza la hipótesis nula (los datos se ajustan a una distribución normal)\n\n")
+  } else {
+    cat("Se rechaza la hipótesis nula (los datos no se ajustan a una distribución normal)\n\n")
+  }
+  
+  # Crear gráfico QQ
+  qqnorm(temperaturas_oficina, main = paste("QQ Plot para", oficina))
+  qqline(temperaturas_oficina, col = 2)
+}
+```
+Con la regresión lineal podemos mirar que en los tres casos sigue una distribución normal. Ya que la mayoría de los puntos están al alcance de la recta.
+
+
+## <b style = 'color:red;'>Ejercicio 5</b>
+
+Analiza los resultados de hacer la **prueba de hipótesis**, teniendo en cuenta como hipótesis nula hA = hB y la hipótesis alternativa como  μA ≠  μB.
+
+### Respuesta: 
+
+```{r}
+# Realizar la prueba t de Student
+resultados_prueba <- t.test(datos$Temperatura[datos$Oficina == "Oficina A"], 
+                            datos$Temperatura[datos$Oficina == "Oficina B"])
+
+# Imprimir los resultados
+print(resultados_prueba)
+# Interpretación de los resultados
+if (resultados_prueba$p.value < 0.05) {
+  cat("Se rechaza la hipótesis nula. Hay evidencia estadística de que las temperaturas medias son diferentes entre la Oficina A y la Oficina B.\n")
+} else {
+  cat("No se rechaza la hipótesis nula. No hay evidencia estadística de diferencias significativas en las temperaturas medias entre la Oficina A y la Oficina B.\n")
+}
+```
+
+Planteamos la siguiente hipótesis nula (H0) y alternativa (H1) para comparar las temperaturas medias entre la Oficina A y la Oficina B:
+
+H0: μA  =μB(No hay diferencia significativa en las temperaturas medias entre la Oficina A y la Oficina B)
+H1: μA ≠  μB(Existe una diferencia significativa en las temperaturas medias entre la Oficina A y la Oficina B)
+
+La prueba tStudent se utiliza para comparar las medias de dos muestras y, en este caso, no se encuentran diferencias estadísticamente significativas en las temperaturas medias entre la Oficina A y la Oficina B. En consecuencia, según el análisis, podemos inferir que las temperaturas medias en estas dos oficinas podrían ser consideradas similares o comparables, ya que no hay evidencia estadística sólida que respalde diferencias significativas entre ellas.
+
+## <b style = 'color:red;'>Ejercicio 6</b>
+
+Calcula la **media y desviación estándar** para cada una de las oficinas y analiza los resultados.
+
+### Respuesta: 
+
+```{r}
+#Pregunta 6
+# Calcular la media y la desviación estándar para cada oficina
+oficinas_unicas <- unique(datos$Oficina)
+
+for (oficina in oficinas_unicas) {
+  temperaturas_oficina <- datos$Temperatura[datos$Oficina == oficina]
+  
+  # Calcular la media
+  media_oficina <- mean(temperaturas_oficina)
+  cat("Oficina:", oficina, "\n")
+  cat("Media:", media_oficina, "\n")
+  
+  # Calcular la desviación estándar
+  desviacion_estandar_oficina <- sd(temperaturas_oficina)
+  cat("Desviación Estándar:", desviacion_estandar_oficina, "\n\n")
+}
+
+```
+
+La media representa el valor promedio de las temperaturas en cada oficina.
+La desviación estándar indica la dispersión de los datos alrededor de la media.
+
+Observaciones:
+
+-La Oficina C tiene la media más alta, después la Oficina A y la Oficina B.
+-La Oficina B tiene la mayor desviación estándar, eso significa que las temperaturas tienen  una mayor variabilidad.
+-La Oficina A tiene la desviación estándar más baja, indicando una menor dispersión de las temperaturas.
+Estas observaciones son indicativas y pueden sugerir patrones en los datos. Por ejemplo, aunque la Oficina C tiene la media más alta, la dispersión de las temperaturas es importante. La Oficina B, a pesar de tener una media ligeramente más baja, tiene una mayor variabilidad en las temperaturas.
+
+
+## <b style = 'color:red;'>Ejercicio 6.1</b>
+
+Estime mediante un **intervalo de confianza**, con nivel de confianza 98%, la temperatura media de las distribuciones que representan la temperatura de los ordenadores de cada una de las aulas.
+
+### Respuesta: 
+
+```{r}
+#Pregunta 6.1
+# Calcular intervalo de confianza al 98% para cada oficina
+oficinas_unicas <- unique(datos$Oficina)
+
+for (oficina in oficinas_unicas) {
+  temperaturas_oficina <- datos$Temperatura[datos$Oficina == oficina]
+  
+  # Calcular el intervalo de confianza
+  intervalo_confianza <- t.test(temperaturas_oficina, conf.level = 0.98)$conf.int
+  
+  cat("Oficina:", oficina, "\n")
+  cat("Intervalo de Confianza (98%): [", intervalo_confianza[1], "-", intervalo_confianza[2], "]\n\n")
+}
+
+```
+Observaciones:
+
+Los intervalos de confianza para las tres oficinas tienen cierta superposición, lo que sugiere que no hay evidencia concluyente de diferencias significativas en las temperaturas medias entre las oficinas.
+Aunque la Oficina C tiene la media estimada más alta, la superposición de los intervalos de confianza indica que no se puede afirmar con certeza que la temperatura media en la Oficina C sea significativamente mayor que en las otras oficinas.
+
+
+## <b style = 'color:red;'>Ejercicio 7</b>
+Realizamos un análisis de la varianza para comprobar si hay diferencias significativas en las temperaturas medias entre las oficinas.
+
+### Respuesta: 
+
+
+```{r}
+#Pregunta 7
+
+# Realizar la prueba ANOVA
+resultados_anova <- aov(Temperatura ~ Oficina, data = datos)
+
+# Imprimir resumen detallado
+print(summary(resultados_anova))
+
+# Interpretar los resultados
+p_value <- anova(resultados_anova)$`Pr(>F)`[1]
+
+if (is.na(p_value)) {
+  cat("No hay suficientes datos para realizar la prueba ANOVA.\n")
+} else {
+  if (p_value < 0.05) {
+    cat("Hay evidencia estadística de diferencias en las temperaturas medias entre al menos dos oficinas.\n")
+  } else {
+    cat("No hay suficientes evidencias estadísticas para afirmar diferencias significativas en las temperaturas medias entre las oficinas.\n")
+  }
+}
+
+# Realizar la prueba ANOVA
+resultados_anova <- aov(Temperatura ~ Oficina, data = datos)
+
+# Crear un gráfico de Residuals vs Fitted
+plot(resultados_anova, which = 1, main = "Residuals vs Fitted")
+
+```
+
+Después de hacer la  prueba de ANOVA el resultado en R es “No hay suficientes evidencias estadísticas para afirmar diferencias significativas en las temperaturas medias entre las oficinas” Esto significa que, según los resultados de la prueba ANOVA, no hay diferencias estadísticamente significativas en las temperaturas medias entre al menos dos de las oficinas.
+
+## <b style = 'color:red;'>Ejercicio 8</b>
+
+Supongamos que la puntuación en un examen está distribuida normalmente con una media de 75 y una desviación estándar de 10. Queremos calcular la probabilidad de que un estudiante obtenga una puntuación menor o igual a 85 en el examen. Además, imaginemos que en otro examen tipo test, los estudiantes tienen una probabilidad del 70% de responder correctamente a cada pregunta. Si el examen consta de 20 preguntas, queremos calcular la probabilidad de que un estudiante responda correctamente a más de 15 preguntas.
+
+### Respuesta: 
+
+```{r}
+#Pregunta 8
+# Problema 1 - Distribución Normal
+media <- 75
+desviacion <- 10
+puntuacion <- 85
+
+# Calcular la probabilidad de obtener una puntuación menor o igual a 85
+prob_normal <- pnorm(puntuacion, mean = media, sd = desviacion)
+cat("Probabilidad de obtener una puntuación menor o igual a 85:", prob_normal, "\n")
+
+# Problema 2 - Distribución Binomial
+prob_respuesta_correcta <- 0.7
+num_preguntas <- 20
+num_respuestas_correctas <- 15
+
+# Calcular la probabilidad de responder correctamente a más de 15 preguntas
+prob_binomial <- 1 - pbinom(num_respuestas_correctas, size = num_preguntas, prob = prob_respuesta_correcta)
+cat("Probabilidad de responder correctamente a más de 15 preguntas:", prob_binomial, "\n")
+```

@@ -1,0 +1,187 @@
+#Pregunta1
+
+# Crear datos
+set.seed(123)  # Para reproducibilidad
+oficinas <- rep(c("Oficina A", "Oficina B", "Oficina C"), each = 20)
+temperaturas <- rnorm(60, mean = c(70, 75, 80), sd = 2)
+calculos_pesados <- rnorm(60, mean = 100, sd = 20)
+
+# Crear un dataframe
+datos <- data.frame(Oficina = oficinas, Temperatura = temperaturas, Cálculos_Pesados = calculos_pesados)
+
+# Guardar los datos en un archivo CSV
+write.csv(datos, "temperaturas_cpu.csv", row.names = FALSE)
+
+# Cargar los datos desde el archivo CSV
+datos <- read.csv("temperaturas_cpu.csv")
+
+# Crear un histograma
+hist(datos$Temperatura, main = "Histograma de Temperaturas",
+     xlab = "Temperatura", ylab = "Frecuencia",
+     col = "lightblue", border = "black")
+
+#Pregunta 2
+
+# Crear un boxplot
+boxplot(Temperatura ~ Oficina, data = datos,
+        col = c("lightblue", "lightgreen", "lightcoral"),
+        main = "Boxplot de Temperaturas en las Oficinas",
+        xlab = "Oficina",
+        ylab = "Temperatura")
+
+
+
+                                                                                                                              
+
+
+#Pregunta 4
+# Realizar la prueba de normalidad para cada oficina
+oficinas_unicas <- unique(datos$Oficina)
+
+for (oficina in oficinas_unicas) {
+  # Seleccionar las temperaturas para la oficina actual
+  temperaturas_oficina <- datos$Temperatura[datos$Oficina == oficina]
+  
+  # Realizar la prueba de normalidad de Shapiro-Wilk
+  shapiro_test_result <- shapiro.test(temperaturas_oficina)
+  
+  # Imprimir los resultados
+  cat("Oficina:", oficina, "\n")
+  cat("Estadística de prueba:", shapiro_test_result$statistic, "\n")
+  cat("Valor p:", shapiro_test_result$p.value, "\n")
+  
+  # Comprobar la significancia y mostrar el resultado
+  if (shapiro_test_result$p.value > 0.05) {
+    cat("No se rechaza la hipótesis nula (los datos se ajustan a una distribución normal)\n\n")
+  } else {
+    cat("Se rechaza la hipótesis nula (los datos no se ajustan a una distribución normal)\n\n")
+  }
+}
+
+
+#Pregunta 4.1
+
+# Realizar la prueba de normalidad y crear gráficos QQ para cada oficina
+oficinas_unicas <- unique(datos$Oficina)
+
+par(mfrow=c(length(oficinas_unicas), 2), mar=c(2, 4, 2, 1))
+
+for (i in seq_along(oficinas_unicas)) {
+  oficina <- oficinas_unicas[i]
+  temperaturas_oficina <- datos$Temperatura[datos$Oficina == oficina]
+  
+  # Realizar la prueba de normalidad de Shapiro-Wilk
+  shapiro_test_result <- shapiro.test(temperaturas_oficina)
+  
+  # Imprimir los resultados
+  cat("Oficina:", oficina, "\n")
+  cat("Estadística de prueba:", shapiro_test_result$statistic, "\n")
+  cat("Valor p:", shapiro_test_result$p.value, "\n")
+  
+  # Comprobar la significancia y mostrar el resultado
+  if (shapiro_test_result$p.value > 0.05) {
+    cat("No se rechaza la hipótesis nula (los datos se ajustan a una distribución normal)\n\n")
+  } else {
+    cat("Se rechaza la hipótesis nula (los datos no se ajustan a una distribución normal)\n\n")
+  }
+  
+  # Crear gráfico QQ
+  qqnorm(temperaturas_oficina, main = paste("QQ Plot para", oficina))
+  qqline(temperaturas_oficina, col = 2)
+}
+
+#Pregunta 5
+
+# Realizar la prueba t de Student
+resultados_prueba <- t.test(datos$Temperatura[datos$Oficina == "Oficina A"], 
+                            datos$Temperatura[datos$Oficina == "Oficina B"])
+
+# Imprimir los resultados
+print(resultados_prueba)
+# Interpretación de los resultados
+if (resultados_prueba$p.value < 0.05) {
+  cat("Se rechaza la hipótesis nula. Hay evidencia estadística de que las temperaturas medias son diferentes entre la Oficina A y la Oficina B.\n")
+} else {
+  cat("No se rechaza la hipótesis nula. No hay evidencia estadística de diferencias significativas en las temperaturas medias entre la Oficina A y la Oficina B.\n")
+}
+
+
+#Pregunta 6
+# Calcular la media y la desviación estándar para cada oficina
+oficinas_unicas <- unique(datos$Oficina)
+
+for (oficina in oficinas_unicas) {
+  temperaturas_oficina <- datos$Temperatura[datos$Oficina == oficina]
+  
+  # Calcular la media
+  media_oficina <- mean(temperaturas_oficina)
+  cat("Oficina:", oficina, "\n")
+  cat("Media:", media_oficina, "\n")
+  
+  # Calcular la desviación estándar
+  desviacion_estandar_oficina <- sd(temperaturas_oficina)
+  cat("Desviación Estándar:", desviacion_estandar_oficina, "\n\n")
+}
+
+#Pregunta 6.1
+# Calcular intervalo de confianza al 98% para cada oficina
+oficinas_unicas <- unique(datos$Oficina)
+
+for (oficina in oficinas_unicas) {
+  temperaturas_oficina <- datos$Temperatura[datos$Oficina == oficina]
+  
+  # Calcular el intervalo de confianza
+  intervalo_confianza <- t.test(temperaturas_oficina, conf.level = 0.98)$conf.int
+  
+  cat("Oficina:", oficina, "\n")
+  cat("Intervalo de Confianza (98%): [", intervalo_confianza[1], "-", intervalo_confianza[2], "]\n\n")
+}
+
+
+
+#Pregunta 7
+
+# Realizar la prueba ANOVA
+resultados_anova <- aov(Temperatura ~ Oficina, data = datos)
+
+# Imprimir resumen detallado
+print(summary(resultados_anova))
+
+# Interpretar los resultados
+p_value <- anova(resultados_anova)$`Pr(>F)`[1]
+
+if (is.na(p_value)) {
+  cat("No hay suficientes datos para realizar la prueba ANOVA.\n")
+} else {
+  if (p_value < 0.05) {
+    cat("Hay evidencia estadística de diferencias en las temperaturas medias entre al menos dos oficinas.\n")
+  } else {
+    cat("No hay suficientes evidencias estadísticas para afirmar diferencias significativas en las temperaturas medias entre las oficinas.\n")
+  }
+}
+
+# Realizar la prueba ANOVA
+resultados_anova <- aov(Temperatura ~ Oficina, data = datos)
+
+# Crear un gráfico de Residuals vs Fitted
+plot(resultados_anova, which = 1, main = "Residuals vs Fitted")
+
+#Pregunta 8
+# Problema 1 - Distribución Normal
+media <- 75
+desviacion <- 10
+puntuacion <- 85
+
+# Calcular la probabilidad de obtener una puntuación menor o igual a 85
+prob_normal <- pnorm(puntuacion, mean = media, sd = desviacion)
+cat("Probabilidad de obtener una puntuación menor o igual a 85:", prob_normal, "\n")
+
+# Problema 2 - Distribución Binomial
+prob_respuesta_correcta <- 0.7
+num_preguntas <- 20
+num_respuestas_correctas <- 15
+
+# Calcular la probabilidad de responder correctamente a más de 15 preguntas
+prob_binomial <- 1 - pbinom(num_respuestas_correctas, size = num_preguntas, prob = prob_respuesta_correcta)
+cat("Probabilidad de responder correctamente a más de 15 preguntas:", prob_binomial, "\n")
+
